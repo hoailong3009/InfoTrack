@@ -1,0 +1,13 @@
+{
+  "url": "https://reqres.in/api/users",
+  "method": "post",
+  "headers": {
+    "x-api-key": "reqres-free-v1"
+  },
+  "data": {
+    "first_name": "Long",
+    "last_name": "Quach",
+    "email": "long@gmail.com",
+    "avatar": "https://reqres.in/img/faces/long-image.jpg"
+  }
+}

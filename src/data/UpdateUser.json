@@ -1,0 +1,14 @@
+{
+  "url": "https://reqres.in/api/users/1",
+  "method": "put",
+  "headers": {
+    "x-api-key": "reqres-free-v1",
+    "Content-Type": "application/json"
+  },
+  "data": {
+    "first_name": "Long",
+    "last_name": "Quach",
+    "email": "long@gmail.com",
+    "avatar": "https://reqres.in/img/faces/long-image.jpg"
+  }
+}

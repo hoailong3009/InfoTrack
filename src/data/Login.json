@@ -1,0 +1,12 @@
+{
+  "url": "https://reqres.in/api/login",
+  "method": "post",
+  "headers": {
+    "x-api-key": "reqres-free-v1",
+    "Content-Type": "application/json"
+  },
+  "data": {
+    "email": "eve.holt@reqres.in",
+    "password": "cityslicka"
+  }
+}
