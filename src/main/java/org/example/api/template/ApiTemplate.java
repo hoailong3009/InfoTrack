@@ -8,7 +8,6 @@ import org.example.api.utils.ApiUtility;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -122,16 +121,11 @@ public class ApiTemplate {
             headers.keys().forEachRemaining(key -> {
                 System.out.println("  " + key + ": " + headers.getString(key));
             });
-        } else {
-            System.out.println("  (No headers)");
         }
-        
         System.out.println("\nBody:");
         if (data != null && data.length() > 0) {
-            System.out.println(data.toString(2)); // Pretty print with indentation of 2
-        } else {
-            System.out.println("  (No body)");
-        }
+            System.out.println(data.toString(2)); 
+        } 
         System.out.println("===============================\n");
     }
 }

@@ -25,53 +25,54 @@ public class ApiServiceRunner {
     }
     
     public String verifyResponse(Map<String, Object> expectedValues) {
-        if (lastResponse == null) {
-            throw new IllegalStateException("No response to validate. Please call the API first.");
-        }
-
-        StringBuilder resultDetails = new StringBuilder();
-
+        StringBuilder failures = new StringBuilder();
+        
         for (Map.Entry<String, Object> entry : expectedValues.entrySet()) {
-            String key = entry.getKey();
+            String fieldName = entry.getKey();
             Object expectedValue = entry.getValue();
             
-            boolean verificationPassed;
-            if ("statusCode".equals(key)) {
-                verificationPassed = lastResponse.getStatusCode() == (int) expectedValue;
-            } else {
-                String jsonPath = key.startsWith("body.") ? key.substring(5) : key;
-                Object actualValue = lastResponse.jsonPath().get(jsonPath);
-                verificationPassed = expectedValue == null ? actualValue == null : expectedValue.equals(actualValue);
-            }
+            Object actualValue = getActualValue(fieldName);
             
-            String detail = key + ": " + (verificationPassed ? "Passed" : "Failed");
-            resultDetails.append(detail).append("\n");
+            if (!isValueMatch(expectedValue, actualValue)) {
+                failures.append(formatFailureMessage(fieldName, expectedValue, actualValue));
+            }
         }
-
-        return resultDetails.toString();
+        
+        return failures.toString();
     }
 
+
     public void executeAndVerifyResponseFromTemplate(String templatePath, TestCase[] testCases) {
-        ApiTemplate apiTemplate = new ApiTemplate(templatePath);        
-        String suiteName = "API Test Suite - " + templatePath.substring(templatePath.lastIndexOf('/') + 1);
-        TestObserver.getInstance().startTestSuite(suiteName);
+        ApiTemplate apiTemplate = new ApiTemplate(templatePath);
         
         for (int i = 0; i < testCases.length; i++) {
             TestCase testCase = testCases[i];
             System.out.println("\nExecute test case #" + (i+1) + (testCase.getTestName() != null ? ": " + testCase.getTestName() : ""));
             
-            TestObserver.getInstance().startTestCase(testCase);
-            
             executeApi(apiTemplate, testCase.getRequestPathValues());
-
-            String errorDetails = verifyResponse(testCase.getExpectedValues());
-            boolean testCasePassed = !errorDetails.contains("Failed");
+            String verificationDetails = verifyResponse(testCase.getExpectedValues());
+            boolean testCasePassed = !verificationDetails.contains("FAILED");
             
-            TestObserver.getInstance().recordTestResult(testCasePassed,
-                testCase.getTestName() + ": " + (testCasePassed ? "PASSED" : "FAILED"));
-            
+            String message = testCase.getTestName() + ": " + (testCasePassed ? "PASSED" : "FAILED") + "\n" + verificationDetails;
+            TestObserver.getInstance().recordTestResult(testCasePassed, message);
         }
-        TestObserver.getInstance().endTestSuite();
+    }
+    
+    private Object getActualValue(String fieldName) {
+        if ("statusCode".equals(fieldName)) {
+            return lastResponse.getStatusCode();
+        } else {
+            String jsonPath = fieldName.startsWith("body.") ? fieldName.substring(5) : fieldName;
+            return lastResponse.jsonPath().get(jsonPath);
+        }
+    }
+    
+    private boolean isValueMatch(Object expected, Object actual) {
+        return expected == null ? actual == null : expected.equals(actual);
+    }
+    
+    private String formatFailureMessage(String fieldName, Object expected, Object actual) {
+        return fieldName + ": FAILED (Expected: " + expected + ", Actual: " + actual + ")\n";
     }
 
 }

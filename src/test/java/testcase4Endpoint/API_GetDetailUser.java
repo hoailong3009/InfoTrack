@@ -3,11 +3,15 @@ package testcase4Endpoint;
 import org.example.api.model.TestCase;
 import org.example.api.pages.ApiPage;
 import org.example.api.utils.ApiTestData;
+import org.example.api.utils.ConfigManager;
 
 public class API_GetDetailUser {
 
     public static void main(String[] args) {
+        ConfigManager.initializeConfig();
+        
         String jsonFile = "/src/data/GetDetailUser.json";
+        String baseUrl = ConfigManager.getBaseUrl();
         ApiPage apiPage = new ApiPage();
         TestCase[] getDetailUser = new TestCase[] {
                 new TestCase("Get success user without update data form API", ApiTestData.expectedResponseOf(
@@ -20,7 +24,7 @@ public class API_GetDetailUser {
                 )),
                 new TestCase(
                         "Get success user with ID = 5",
-                        ApiTestData.createRequest("url", "https://reqres.in/api/users/5"),
+                        ApiTestData.createRequest("url", baseUrl + "/api/users/5"),
                         ApiTestData.expectedResponseOf(
                                 "statusCode", 200,
                                 "data.id",5,
@@ -31,12 +35,11 @@ public class API_GetDetailUser {
                 ),
                 new TestCase(
                         "Get failed user wrong url",
-                        ApiTestData.createRequest("url", "https://reqres.in/api/use"),
+                        ApiTestData.createRequest("url", baseUrl + "/apiv/user/1"),
                         ApiTestData.expectedResponseOf("statusCode", 404)
                 ),
                 new TestCase(
-                        "Get failed user not exist",
-                        ApiTestData.createRequest("url", "https://reqres.in/api/user/abc123"),
+                        "Get failed user not exist",ApiTestData.createRequest("url", baseUrl + "/api/user/abc123"),
                         ApiTestData.expectedResponseOf("statusCode", 404)
                 )
 

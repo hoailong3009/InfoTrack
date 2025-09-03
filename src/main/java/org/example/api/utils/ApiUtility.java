@@ -6,95 +6,65 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+
 
 public class ApiUtility {
 
     public static JSONObject readJsonFile(String jsonFilePath) {
         try {
             String jsonContent = new String(Files.readAllBytes(Paths.get(jsonFilePath)));
-            return new JSONObject(jsonContent);
+            JSONObject jsonObject = new JSONObject(jsonContent);
+            
+            // Auto-replace URL with environment base URL
+            updateUrlForEnvironment(jsonObject);
+            
+            return jsonObject;
         } catch (IOException e) {
             throw new RuntimeException("Not found JSON file: " + e.getMessage(), e);
         }
     }
 
     public static void updateValueByPath(JSONObject jsonObject, String path, Object value) {
-        if (jsonObject == null || path == null || path.trim().isEmpty()) {
-            throw new IllegalArgumentException("JSONObject và path không được null hoặc rỗng");
-        }
-        
         String[] keys = path.split("\\.");
-        JSONObject currentObject = jsonObject;
+        JSONObject current = jsonObject;
         
+        // Navigate to parent objects
         for (int i = 0; i < keys.length - 1; i++) {
             String key = keys[i];
-            currentObject = navigateToNextLevel(currentObject, key);
+            if (!current.has(key)) {
+                current.put(key, new JSONObject());
+            }
+            current = current.getJSONObject(key);
         }
         
-        String lastKey = keys[keys.length - 1];
-        setValueAtPath(currentObject, lastKey, value);
+        // Set final value
+        current.put(keys[keys.length - 1], value);
     }
-
-    private static JSONObject navigateToNextLevel(JSONObject currentObject, String key) {
-        if (key.contains("[") && key.endsWith("]")) {
-            return navigateToArrayElement(currentObject, key);
-        } else {
-            return navigateToObjectKey(currentObject, key);
-        }
-    }
-
-    private static JSONObject navigateToArrayElement(JSONObject currentObject, String arrayKey) {
-        String arrayName = arrayKey.substring(0, arrayKey.indexOf('['));
-        int index = Integer.parseInt(arrayKey.substring(arrayKey.indexOf('[') + 1, arrayKey.indexOf(']')));
-        
-        if (!currentObject.has(arrayName)) {
-            currentObject.put(arrayName, new JSONArray());
-        }
-        
-        JSONArray array = currentObject.getJSONArray(arrayName);
-        
-        while (array.length() <= index) {
-            array.put(new JSONObject());
-        }
-        
-        if (!(array.get(index) instanceof JSONObject)) {
-            array.put(index, new JSONObject());
-        }
-        
-        return array.getJSONObject(index);
-    }
-
-    private static JSONObject navigateToObjectKey(JSONObject currentObject, String key) {
-        if (!currentObject.has(key) || !(currentObject.get(key) instanceof JSONObject)) {
-            currentObject.put(key, new JSONObject());
-        }
-        return currentObject.getJSONObject(key);
-    }
-
-    private static void setValueAtPath(JSONObject targetObject, String lastKey, Object value) {
-        if (lastKey.contains("[") && lastKey.endsWith("]")) {
-            setValueInArray(targetObject, lastKey, value);
-        } else {
-            targetObject.put(lastKey, value);
+    
+    private static void updateUrlForEnvironment(JSONObject jsonObject) {
+        if (jsonObject.has("url")) {
+            String originalUrl = jsonObject.getString("url");
+            String baseUrl = ConfigManager.getBaseUrl();
+            
+            // Extract path from original URL (everything after domain)
+            if (originalUrl.contains("://")) {
+                String path = extractPathFromUrl(originalUrl);
+                String newUrl = baseUrl + path;
+                jsonObject.put("url", newUrl);
+                
+                System.out.println("URL được cập nhật từ config [" + ConfigManager.getEnvironment() + "]: " + newUrl);
+            }
         }
     }
-
-    private static void setValueInArray(JSONObject targetObject, String arrayKey, Object value) {
-        String arrayName = arrayKey.substring(0, arrayKey.indexOf('['));
-        int index = Integer.parseInt(arrayKey.substring(arrayKey.indexOf('[') + 1, arrayKey.indexOf(']')));
-        
-        if (!targetObject.has(arrayName)) {
-            targetObject.put(arrayName, new JSONArray());
+    
+    private static String extractPathFromUrl(String url) {
+        // Extract path from URL: https://reqres.in/api/users -> /api/users
+        try {
+            int domainStart = url.indexOf("://") + 3;
+            int pathStart = url.indexOf('/', domainStart);
+            return pathStart > 0 ? url.substring(pathStart) : "";
+        } catch (Exception e) {
+            return "";
         }
-        
-        JSONArray array = targetObject.getJSONArray(arrayName);
-        
-        while (array.length() <= index) {
-            array.put(JSONObject.NULL);
-        }
-        
-        array.put(index, value);
     }
 }

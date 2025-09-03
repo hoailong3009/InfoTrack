@@ -6,6 +6,7 @@ public class TestObserver {
 
     private static TestObserver instance;
     private static boolean testSuiteStarted = false;
+    private static int testCaseCount = 0;
 
     public static synchronized TestObserver getInstance() {
         if (instance == null) {
@@ -13,35 +14,41 @@ public class TestObserver {
         }
         return instance;
     }
-    
+
     private TestObserver() {
         ExtentReporter.initReport();
     }
 
-    public void startTestSuite(String suiteName) {
-        if (!testSuiteStarted) {
-            ExtentReporter.startTest(suiteName, "Test Suite: " + suiteName);
-            testSuiteStarted = true;
-        }
-    }
-
-    public void startTestCase(TestCase testCase) {
-        if (!testSuiteStarted) {
-            startTestSuite("Default Test Suite");
-        }
-    }
-
     public void recordTestResult(boolean isPassed, String message) {
+        // Auto start suite if not started
+        if (!testSuiteStarted) {
+            autoStartTestSuite();
+        }
+
+        testCaseCount++;
+
+        // Format message with HTML line breaks for better readability in report
+        String formattedMessage = message.replace("\n", "<br/>");
+
         if (isPassed) {
-            ExtentReporter.pass(message);
+            ExtentReporter.pass(formattedMessage);
         } else {
-            ExtentReporter.error(message);
+            ExtentReporter.error(formattedMessage);
         }
     }
-    
-    public void endTestSuite() {
+
+    private void autoStartTestSuite() {
+        String suiteName = "API Test Suite";
+        ExtentReporter.startTest(suiteName, "");
+        testSuiteStarted = true;
+        testCaseCount = 0;
+    }
+
+    // Optional method to finalize report (can be called at end of test run)
+    public static void finalizeReport() {
         if (testSuiteStarted) {
             testSuiteStarted = false;
+            testCaseCount = 0;
         }
     }
 }

@@ -23,11 +23,6 @@ public class ExtentReporter {
     private static ThreadLocal<ExtentTest> currentTest = new ThreadLocal<>();
     
     static {
-        File reportsDir = new File(System.getProperty("user.dir") + "/reports");
-        if (!reportsDir.exists()) {
-            reportsDir.mkdirs();
-        }
-        
         if (!shutdownHookRegistered) {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 if (initialized.get() && extent != null) {
@@ -50,7 +45,8 @@ public class ExtentReporter {
         }
         
         String timeStamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy_HH-mm-ss"));
-        reportPath = System.getProperty("user.dir") + "/reports/TestReport_" + timeStamp + ".html";
+        String userHome = System.getProperty("user.home");
+        reportPath = userHome + "/Desktop/TestReport_" + timeStamp + ".html";
         
         ExtentSparkReporter reporter = new ExtentSparkReporter(reportPath);
         reporter.config().setReportName("InfoTrack Automation Results");
@@ -93,11 +89,4 @@ public class ExtentReporter {
             currentTest.get().log(Status.PASS, success);
         }
     }
-
-    public static void json(String json) {
-        if (currentTest.get() != null) {
-            currentTest.get().info(json);
-        }
-    }
-
 }

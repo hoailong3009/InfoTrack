@@ -3,11 +3,15 @@ package testcase4Endpoint;
 import org.example.api.model.TestCase;
 import org.example.api.pages.ApiPage;
 import org.example.api.utils.ApiTestData;
+import org.example.api.utils.ConfigManager;
 
 public class API_CreateUser {
 
     public static void main(String[] args) {
+        ConfigManager.initializeConfig();
+        
         String jsonFile = "/src/data/CreateUser.json";
+        String baseUrl = ConfigManager.getBaseUrl();
         ApiPage apiPage = new ApiPage();
         TestCase[] createUser = new TestCase[] {
                 new TestCase("Create success new user without update data from API", ApiTestData.expectedResponseOf(
@@ -29,7 +33,8 @@ public class API_CreateUser {
                 ),
                 new TestCase(
                         "Create failed new user with exist email",
-                        ApiTestData.createRequest("data.email","kevin@gmail.com",
+                        ApiTestData.createRequest("url", baseUrl + "/api/users",
+                                                                "data.email","kevin@gmail.com",
                                                                 "data.first_name", "Long",
                                                                 "data.last_name", "Quach"),
                         ApiTestData.expectedResponseOf("statusCode", 400)
